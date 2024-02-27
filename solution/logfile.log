@@ -1,0 +1,22 @@
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /api/ping                 --> solution/router.RouteAll.func1 (3 handlers)
+[GIN-debug] GET    /api/countries            --> solution/api.GetAllCountries (3 handlers)
+[GIN-debug] GET    /api/countries/:alpha2    --> solution/api.GetCountryByid (3 handlers)
+[GIN-debug] GET    /auth/sing-in             --> github.com/gin-gonic/gin.CustomRecoveryWithWriter.func1 (2 handlers)
+[GIN-debug] POST   /auth/register            --> github.com/gin-gonic/gin.CustomRecoveryWithWriter.func1 (2 handlers)
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on 0.0.0.0:8080
+[GIN] 2024/02/28 - 04:29:46 | 200 |      2.1037ms |             ::1 | GET      "/api/countries?region=Asia"
+[GIN] 2024/02/28 - 04:29:51 | 200 |       996.3µs |             ::1 | GET      "/api/countries?region=asia"
+[GIN] 2024/02/28 - 04:29:54 | 200 |      1.1226ms |             ::1 | GET      "/api/countries?region=asiA"
+[GIN] 2024/02/28 - 04:29:59 | 200 |      1.3443ms |             ::1 | GET      "/api/countries"
+[GIN] 2024/02/28 - 04:30:03 | 500 |       1.362ms |             ::1 | GET      "/api/countries/en"
+[GIN] 2024/02/28 - 04:30:06 | 500 |         537µs |             ::1 | GET      "/api/countries/eng"
+[GIN] 2024/02/28 - 04:30:14 | 500 |       498.9µs |             ::1 | GET      "/api/countries/ger"
+[GIN] 2024/02/28 - 04:30:18 | 200 |            0s |             ::1 | GET      "/api/countries/ge"

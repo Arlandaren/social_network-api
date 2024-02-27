@@ -1,39 +1,33 @@
 package main
 
 import (
-	"log"
-	"log/slog"
+	"fmt"
 	"os"
+	"solution/models"
+	"solution/router"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/jmoiron/sqlx"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	logger := slog.Default()
+	Logger := NewLogger()
 
-	pgURL := os.Getenv("POSTGRES_CONN")
-	if pgURL == "" {
-		logger.Error("missed POSTGRES_CONN env")
-		os.Exit(1)
-	}
+	gin.DefaultWriter = Logger.Writer()
 
-	db, err := sqlx.Connect("pgx", pgURL)
+	err := godotenv.Load()
+
 	if err != nil {
-		log.Fatalln(err)
+		Logger.Fatal("Couldnt load env variables")
 	}
-	defer db.Close()
-
-	serverAddress := os.Getenv("SERVER_ADDRESS")
-	if serverAddress == "" {
-		logger.Error("missed SERVER_ADDRESS env (export smth like ':8080')")
-		os.Exit(1)
+	err = models.InitDB(os.Getenv("POSTGRES_CONN"))
+	if err != nil{
+		fmt.Println(err)
 	}
+	// Logger.Info("DB inititalized succesfully")
+	r := gin.Default()
+	router.RouteAll(r)
 
-	s := NewServer(serverAddress, logger)
-
-	err = s.Start()
-	if err != nil {
-		logger.Error("server has been stopped", "error", err)
-	}
+	r.Run(os.Getenv("SERVER_ADDRESS"))
 }
+

@@ -1,0 +1,62 @@
+package middlewares
+
+import(
+	"github.com/go-redis/redis"
+	"fmt"
+	"net/http"
+	"github.com/gin-gonic/gin"
+)
+
+func InitRedis()*redis.Client{
+	redisClient := redis.NewClient(&redis.Options{Addr: "localhost:6379", DB:0})
+	_, err := redisClient.Ping().Result()
+    if err != nil {
+        return nil
+    }
+    return redisClient
+}
+func CacheMiddleware(redisClient *redis.Client) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        if redisClient == nil {
+            c.String(http.StatusInternalServerError, "Internal Server Error")
+            return
+        }
+
+        defer redisClient.Close()
+
+        key := generateCacheKey(c.Request.URL.Path, c.Request.Method)
+
+        // Попытка получить данные из кеша
+        cachedData, err := redisClient.Get(key).Result()
+        if err == nil {
+            // Если данные найдены в кеше, возвращаем их клиенту
+            c.String(http.StatusOK, cachedData)
+            return
+        }
+
+        // Вызываем функцию для выполнения запроса к базе данных
+        dataFromDB, err := queryDB(c)
+        if err != nil {
+            // Обработка ошибки запроса к базе данных
+            c.String(http.StatusInternalServerError, "Internal Server Error")
+            return
+        }
+
+        // Обновляем кеш с данными из базы данных
+        err = redisClient.Set(key, dataFromDB, time.Minute).Err()
+        if err != nil {
+            fmt.Println("Ошибка установки данных в Redis:", err)
+        }
+
+        // Возвращаем данные клиенту
+        c.String(http.StatusOK, dataFromDB)
+    }
+}
+func CacheData(redis *redis.Client) error{
+	defer redis.Close()
+	key := generateCacheKey(c.Request.URL.Path, c.Request.Method)
+}
+
+func generateCacheKey(path, method string) string {
+    return fmt.Sprintf("%s:%s", method, path)
+}
