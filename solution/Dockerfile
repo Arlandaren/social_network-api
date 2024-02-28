@@ -29,6 +29,6 @@ COPY --from=builder /opt/bin/application ./
 
 # Add required static files.
 #COPY assets assets
-
+COPY .env .
 # Run the application.
 CMD ["./application"]
