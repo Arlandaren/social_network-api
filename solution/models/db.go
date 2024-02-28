@@ -39,7 +39,7 @@ package models
 import (
 	"fmt"
 	"strings"
-
+	"time"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // PostgreSQL driver
 )
@@ -80,14 +80,14 @@ func MigrateTables() error {
 	if _, err := DB.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
 			id SERIAL PRIMARY KEY,
-			username VARCHAR(255) UNIQUE NOT NULL,
-			email VARCHAR(255) UNIQUE NOT NULL,
-			password VARCHAR(255) NOT NULL,
+			username TEXT UNIQUE NOT NULL,
+			email TEXT UNIQUE NOT NULL,
+			password TEXT NOT NULL,
 			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-			country VARCHAR(255),
+			country TEXT,
 			public_profile BOOLEAN DEFAULT FALSE,
-			phone_number VARCHAR(20),
-			image VARCHAR(255)
+			phone_number TEXT,
+			image TEXT
 	);
     `); err != nil {
 		return err
@@ -129,4 +129,19 @@ func GetCountryByid(alpha2 string) (*Countries, error) {
 		return nil, err
 	}
 	return &countries, nil
+}
+func GetUser(username string) (*User, error) {
+	var user User
+	err := DB.Get(&user, fmt.Sprintf("SELECT * FROM users WHERE LOWER(username) = '%s'", strings.ToLower(username)))
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+func CreateUser(username string, email string, password string, country string, is_public bool, phone_number string, image string) error { 
+    _, err := DB.Exec("INSERT INTO users (username, email, password, created_at, country, public_profile, phone_number, image) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)", strings.ToLower(username), email, password, time.Now(), country, is_public, phone_number, image)
+    if err != nil {
+        return err
+    }
+    return nil
 }
