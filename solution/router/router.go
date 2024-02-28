@@ -13,7 +13,7 @@ func RouteAll(r * gin.Engine){
 		api_router.GET("/countries", api.GetAllCountries)
 		api_router.GET("/countries/:alpha2", api.GetCountryByid)
 		// api_router.Use(middlewares.AuthValidation)
-		auth := r.Group("auth")
+		auth := api_router.Group("auth")
 		{
 		auth.POST("/sign-in", api.Signin)
 		auth.POST("/register",api.Register)
