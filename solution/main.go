@@ -26,11 +26,13 @@ func main() {
 	// 	Password: os.Getenv("POSTGRES_PASSWORD"),
 	// 	DBname:   os.Getenv("POSTGRES_DATABASE"),
 	// }
-	err = models.InitDB(os.Getenv("POSTGRES_CONN"))
+	dsn := os.Getenv("POSTGRES_CONN")+"?sslmode=disable"
+	err = models.InitDB(dsn)
 	if err != nil {
-		Logger.Fatal(err, " CONN- ", os.Getenv("POSTGRES_CONN"))
+		Logger.Fatal(err, " CONN- ", dsn)
 		// fmt.Println(err)
 	}
+	Logger.Info(dsn)
 	// Logger.Info("DB inititalized succesfully")
 	r := gin.Default()
 	router.RouteAll(r)
