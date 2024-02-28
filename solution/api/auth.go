@@ -1,12 +1,14 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"solution/models"
 	"solution/utils"
+	"strings"
 	"time"
-    "strings"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -78,7 +80,8 @@ func Signin(c *gin.Context){
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
     signedString, err := token.SignedString([]byte(os.Getenv("JWT_KEY")))
     if err != nil {
-        c.JSON(400, gin.H{"status": "error", "message": "couldnt generate token"})
+        fmt.Println("||||||||||||||||||||||||||||||||||||||||||||||||||      ",[]byte(os.Getenv("JWT_KEY")), "||||||||||||||||||||||||||",err.Error())
+        c.JSON(500, gin.H{"status": "error", "message": "couldnt generate token"})
         return
     }
     c.SetCookie("token", signedString,int(expirationTime.Unix()),"/",strings.Split(os.Getenv("SERVER_ADDRESS"), ":")[0],false,true)
