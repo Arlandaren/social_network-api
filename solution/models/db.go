@@ -55,7 +55,6 @@ type Config struct{
 var DB *sqlx.DB
 
 func InitDB(cfg string) error {
-	// dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",cfg.Host,cfg.Port,cfg.User,cfg.Password,cfg.DBname)
 	db, err := sqlx.Connect("postgres", cfg)
 	if err != nil {
 		return err
