@@ -43,11 +43,20 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // PostgreSQL driver
 )
+type Config struct{
+	Host string
+	Port string
+	User string
+	Password string
+	DBname string
+	SSLmode string
+}
 
 var DB *sqlx.DB
 
-func InitDB(conn_string string) error {
-	db, err := sqlx.Connect("postgres", conn_string)
+func InitDB(cfg Config) error {
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",cfg.Host,cfg.Port,cfg.User,cfg.Password,cfg.DBname)
+	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
 		return err
 	}

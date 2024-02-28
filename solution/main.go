@@ -19,9 +19,16 @@ func main() {
 	if err != nil {
 		Logger.Fatal("Couldnt load env variables")
 	}
-	err = models.InitDB(os.Getenv("POSTGRES_CONN"))
+	config := models.Config{
+		Host:     os.Getenv("POSTGRES_HOST"),
+		Port:     os.Getenv("POSTGRES_PORT"),
+		User:     os.Getenv("POSTGRES_USERNAME"),
+		Password: os.Getenv("POSTGRES_PASSWORD"),
+		DBname:   os.Getenv("POSTGRES_DATABASE"),
+	}
+	err = models.InitDB(config)
 	if err != nil {
-		Logger.Fatal(err," CONN- ", os.Getenv("POSTGRES_CONN"))
+		Logger.Fatal(err, " CONN- ", os.Getenv("POSTGRES_CONN"))
 		// fmt.Println(err)
 	}
 	// Logger.Info("DB inititalized succesfully")
