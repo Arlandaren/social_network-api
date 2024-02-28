@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"solution/models"
@@ -19,18 +18,16 @@ func Register(c *gin.Context) {
         c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": err.Error()})
         return
     }
-    fmt.Println(user.ID)
 
     existingUser, err := models.GetUser(user.Username)
-    if err != nil{
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
-
-    if existingUser.ID != 0 {
+    if existingUser != nil && existingUser.ID != 0 {
         c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "user already exists"})
         return
     }
+    // if existingUser.ID != 0 {
+    //     c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "user already exists"})
+    //     return
+    // }
 
     hashedPassword, err := utils.GenerateHashPassword(user.Password)
     if err != nil {
