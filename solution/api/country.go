@@ -20,7 +20,7 @@ func GetCountryByid(c *gin.Context){
 	if err != nil{
 		c.JSON(500, gin.H{"error":err.Error()})
 	} else{
-		c.JSON(200,gin.H{"countries":country})
+		c.JSON(200,country)
 	}
 
 }
