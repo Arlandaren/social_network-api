@@ -25,6 +25,7 @@ func AuthValidation(c *gin.Context){
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token)(interface{}, error){return []byte(os.Getenv("JWT_KEY")),nil})
 	if err != nil{
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error":"error with parsing token", "message":err.Error()})
+		return
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
