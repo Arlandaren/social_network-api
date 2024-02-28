@@ -40,7 +40,7 @@ func Register(c *gin.Context) {
         return
     }
 
-    c.JSON(http.StatusOK, gin.H{"status": "success", "message": "user created"})
+    c.JSON(201, gin.H{"status": "success", "message": "user created"})
 }
 func Signin(c *gin.Context){
 	var user *models.User
@@ -81,5 +81,5 @@ func Signin(c *gin.Context){
         return
     }
     c.SetCookie("token", signedString,int(expirationTime.Unix()),"/",strings.Split(os.Getenv("SERVER_ADDRESS"), ":")[0],false,true)
-    c.JSON(200,gin.H{"token":signedString})
+    c.JSON(201,gin.H{"token":signedString})
 }
