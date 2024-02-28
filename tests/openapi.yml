@@ -3,7 +3,7 @@ info:
   title: Pulse API
   version: "1.0"
 servers:
-  - url: http://localhost:8080/v1/api
+  - url: http://localhost:8080/api
 paths:
   /ping:
     get:
