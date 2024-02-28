@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"solution/models"
 	"solution/router"
@@ -21,8 +20,9 @@ func main() {
 		Logger.Fatal("Couldnt load env variables")
 	}
 	err = models.InitDB(os.Getenv("POSTGRES_CONN"))
-	if err != nil{
-		fmt.Println(err)
+	if err != nil {
+		Logger.Fatal(err)
+		// fmt.Println(err)
 	}
 	// Logger.Info("DB inititalized succesfully")
 	r := gin.Default()
@@ -30,6 +30,3 @@ func main() {
 
 	r.Run(os.Getenv("SERVER_ADDRESS"))
 }
-
-
- 

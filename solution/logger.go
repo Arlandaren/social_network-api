@@ -15,8 +15,8 @@ func NewLogger() *LoggerWrapper {
     if err != nil {
         Logger.Println("Не удалось создать файл логов: ", err)
     }
-    
-    logger := log.New(file, "|||LOG|||", log.Ldate|log.Ltime|log.Lshortfile)
+    print(file)
+    logger := log.New(os.Stdout, "|||LOG|||", log.Ldate|log.Ltime|log.Lshortfile)
     return &LoggerWrapper{
         Logger: logger,
     }
