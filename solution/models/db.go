@@ -42,14 +42,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // PostgreSQL driver
 )
-type Config struct{
-	Host string
-	Port string
-	User string
-	Password string
-	DBname string
-	SSLmode string
-}
 
 var DB *sqlx.DB
 
@@ -144,10 +136,17 @@ func GetUser(username string) (*User, error) {
 	}
 	return &user, nil
 }
-func CreateUser(username string, email string, password string, country string, is_public bool, phone_number string, image string) error { 
+func CreateUser(username string, email string, password string, country string, is_public bool, phone_number string, image string) (*Profile,error) { 
     _, err := DB.Exec("INSERT INTO users (login, email, password, countryCode, isPublic, phone, image) VALUES ($1, $2, $3, $4, $5, $6, $7)", strings.ToLower(username), email, password, country, is_public, phone_number, image)
     if err != nil {
-        return err
+        return nil,err
     }
-    return nil
+	profile := Profile{
+		Login: strings.ToLower(username),
+		Email: email,
+		CountryCode: country,
+		IsPublic: is_public,
+		Phone: phone_number,
+	}
+    return &profile, nil
 }

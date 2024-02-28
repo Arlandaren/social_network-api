@@ -34,13 +34,13 @@ func Register(c *gin.Context) {
     }
     user.Password = hashedPassword
 
-    err = models.CreateUser(user.Username,user.Email,user.Password,user.Country,user.PublicProfile,user.PhoneNumber,user.Image)
+    profile,err := models.CreateUser(user.Username,user.Email,user.Password,user.CountryCode,user.PublicProfile,user.PhoneNumber,user.Image)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "message": "could not create user"})
         return
     }
 
-    c.JSON(201, gin.H{"profile":user})
+    c.JSON(201, gin.H{"profile":profile})
 }
 func Signin(c *gin.Context){
 	var user *models.User
@@ -50,12 +50,12 @@ func Signin(c *gin.Context){
     }
     existingUser, err := models.GetUser(user.Username)
     if err != nil{
-        c.JSON(http.StatusBadRequest, gin.H{"error": "user not found"})
+        c.JSON(http.StatusBadRequest, gin.H{"error": "user not found", "message":err.Error()})
         return
     }
 
     if existingUser.ID == 0{
-        c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "User not found"})
+        c.JSON(http.StatusBadRequest, gin.H{"error": "User not found", "message": err.Error()})
         return
     }
     if !utils.CompareHashPassword(user.Password, existingUser.Password){

@@ -1,8 +1,6 @@
 package models
 
 import (
-	// "time"
-
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -11,13 +9,18 @@ type User struct {
 	Username         string `json:"login" db:"login"`
 	Email            string `json:"email" db:"email"`
 	Password         string `json:"password" db:"password"`
-	// RegistrationDate time.Time `json:"registration_date" db:"created_at"`
-	Country          string `json:"countryCode" db:"countryCode"`
-	PublicProfile    bool   `json:"isPublic" db:"isPublic"`
+	CountryCode          string `json:"countryCode" db:"countrycode"`
+	PublicProfile    bool   `json:"isPublic" db:"ispublic"`
 	PhoneNumber      string `json:"phone" db:"phone"`
 	Image            string `json:"image" db:"image"`
 }
-
+type Profile struct{
+    Login string    `json:"login"`
+    Email string `json:"email"`
+    CountryCode string `json:"countryCode"`
+    IsPublic bool `json:"isPublic"`
+    Phone string `json:"phone"`
+}
 type Countries struct {
 	ID     uint   `json:"id" db:"id"`
 	Name   string `json:"name" db:"name"`
