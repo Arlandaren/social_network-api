@@ -21,7 +21,7 @@ func main() {
 	}
 	err = models.InitDB(os.Getenv("POSTGRES_CONN"))
 	if err != nil {
-		Logger.Fatal(err)
+		Logger.Fatal(err, os.Getenv("POSTGRES_CONN"))
 		// fmt.Println(err)
 	}
 	// Logger.Info("DB inititalized succesfully")
