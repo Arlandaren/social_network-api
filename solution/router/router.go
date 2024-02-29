@@ -2,6 +2,7 @@ package router
 
 import (
 	"solution/api"
+	"solution/middlewares"
 	// "solution/middlewares"
 	"github.com/gin-gonic/gin"
 )
@@ -17,6 +18,11 @@ func RouteAll(r * gin.Engine){
 		{
 		auth.POST("/sign-in", api.Signin)
 		auth.POST("/register",api.Register)
+		}
+		profile := api_router.Group("me")
+		{
+			profile.Use(middlewares.AuthValidation)
+			profile.GET("/profile",api.Me)
 		}
 	}
 	

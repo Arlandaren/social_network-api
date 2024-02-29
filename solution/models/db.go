@@ -150,3 +150,10 @@ func CreateUser(username string, email string, password string, country string, 
 	}
     return &profile, nil
 }
+func GetProfile(id uint)(*Profile, error){
+	var profile Profile
+	if err := DB.Get(&profile, fmt.Sprintf("SELECT login, email, countryCode, isPublic, phone FROM users WHERE id = '%d'", id)); err != nil {
+		return nil, err
+	}
+	return &profile,nil
+}
