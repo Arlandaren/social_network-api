@@ -106,15 +106,15 @@ func MigrateTables() error {
 	return nil
 }
 
-func GetAllCountries(region string) ([]Countries, error) {
-	var countries []Countries
+func GetAllCountries(region string) ([]CountryResponse, error) {
+	var countries []CountryResponse
 	if region == "" {
-		if err := DB.Select(&countries, "SELECT * FROM countries"); err != nil {
+		if err := DB.Select(&countries, "SELECT name,alpha2,alpha3,region FROM countries"); err != nil {
 			fmt.Println(err.Error())
 			return nil, err
 		}
 	} else {
-		if err := DB.Select(&countries, fmt.Sprintf("SELECT * FROM countries WHERE LOWER(region) = '%s'", strings.ToLower(region))); err != nil {
+		if err := DB.Select(&countries, fmt.Sprintf("SELECT name,alpha2,alpha3,region FROM countries WHERE LOWER(region) = '%s'", strings.ToLower(region))); err != nil {
 			return nil, err
 		}
 	}

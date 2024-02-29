@@ -28,6 +28,12 @@ type Countries struct {
 	Alpha3 string `json:"alpha3" db:"alpha3"`
 	Region string `json:"region" db:"region"`
 }
+type CountryResponse struct {
+    Name   string `json:"name"`
+    Alpha2 string `json:"alpha2"`
+    Alpha3 string `json:"alpha3"`
+    Region string `json:"region"`
+}
 type Claims struct {
 	User_id uint `json:"user_id"`
 	jwt.StandardClaims
