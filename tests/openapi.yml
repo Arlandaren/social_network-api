@@ -33,6 +33,7 @@ paths:
         Получение списка стран с возможной фильтрацией.
 
         Используется на странице регистрации для предоставления возможности выбора страны, к которой относится пользователь.
+        Если хотя бы один переданный регион является некорректным, весь запрос считается некорректным.
 
         Если никакие из фильтров не переданы, необходимо вернуть все страны.
       operationId: listCountries
@@ -406,6 +407,7 @@ paths:
         Позволяет добавить другого пользователя к себе в друзья.
 
         Если указанный пользователь уже добавлен в друзья, верните успешный ответ.
+        Если пользователь добавляет в друзья самого себя, верните успешный ответ (добавлять в друзья при этом не нужно).
 
         Сервер должен идентифицировать пользователя по переданному токену. Значение токена будет подставляться в заголовок `Authorization` в формате `Bearer {token}`.
       security:
@@ -499,7 +501,7 @@ paths:
     get:
       summary: Получение списка друзей
       description: |
-        Используется для получения списка своих друзей.
+        Используется для получения списка своих друзей (пользователей, кого инициатор запроса добавил в друзья).
 
         Для плавной работы приложения используется пагинация.
 
@@ -644,7 +646,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post"
+                type: array
+                items:
+                  $ref: "#/components/schemas/post"
         "401":
           description: Переданный токен не существует либо некорректен.
           content:
@@ -684,7 +688,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post"
+                type: array
+                items:
+                  $ref: "#/components/schemas/post"
         "401":
           description: Переданный токен не существует либо некорректен.
           content:
@@ -823,6 +829,7 @@ components:
       type: string
       description: E-mail пользователя
       maxLength: 50
+      minLength: 1
       example: yellowstone1980@you.ru
     userPassword:
       type: string
@@ -853,6 +860,7 @@ components:
       description: Ссылка на фото для аватара пользователя
       example: https://http.cat/images/100.jpg
       maxLength: 200
+      minLength: 1
     userProfile:
       type: object
       description: Информация о профиле пользователя
@@ -878,6 +886,7 @@ components:
       type: string
       description: Уникальный идентификатор публикации, присвоенный сервером.
       example: 550e8400-e29b-41d4-a716-446655440000
+      maxLength: 100
     postContent:
       type: string
       description: Текст публикации.
@@ -968,6 +977,7 @@ components:
         type: integer
         format: int32
         default: 0
+        minimum: 0
   securitySchemes:
     bearerAuth:
       type: http
