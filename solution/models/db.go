@@ -137,12 +137,12 @@ func GetUser(username string) (*User, error) {
 	return &user, nil
 }
 func CreateUser(username string, email string, password string, country string, is_public bool, phone_number string, image string) (*Profile,error) { 
-    _, err := DB.Exec("INSERT INTO users (login, email, password, countryCode, isPublic, phone, image) VALUES ($1, $2, $3, $4, $5, $6, $7)", strings.ToLower(username), email, password, country, is_public, phone_number, image)
+    _, err := DB.Exec("INSERT INTO users (login, email, password, countryCode, isPublic, phone, image) VALUES ($1, $2, $3, $4, $5, $6, $7)", username, email, password, country, is_public, phone_number, image)
     if err != nil {
         return nil,err
     }
 	profile := Profile{
-		Login: strings.ToLower(username),
+		Login: username,
 		Email: email,
 		CountryCode: country,
 		IsPublic: is_public,
