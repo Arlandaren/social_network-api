@@ -2,8 +2,8 @@ package main
 
 import (
 	"os"
-	"solution/models"
-	"solution/router"
+	"solution/pkg/models"
+	"solution/pkg/router"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
