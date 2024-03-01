@@ -83,6 +83,7 @@ func Signin(c *gin.Context) {
 	expirationTime := time.Now().Add(60 * time.Minute)
 	claims := models.Claims{
 		User_id:        existingUser.ID,
+		User_login: 	existingUser.Username,
 		StandardClaims: jwt.StandardClaims{Subject: existingUser.Username, ExpiresAt: expirationTime.Unix()},
 	}
 

@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -37,6 +39,7 @@ type CountryResponse struct {
 }
 type Claims struct {
 	User_id uint `json:"user_id"`
+	User_login string `json:"user_login"`
 	jwt.StandardClaims
 }
 type EditParameters struct {
@@ -48,4 +51,11 @@ type EditParameters struct {
 type UpdatePasswordForm struct {
 	OldPasword string	`json:"oldPassword"`
 	NewPasword string	`json:"newPassword"`
+}
+type FriendRequest struct {
+	Login string `json:"login"`
+}
+type Friend struct{
+	FriendLogin string `json:"friend_login" db:"friend_login"`
+	AddedAt time.Time `json:"addedAt" db:"added_at"`
 }

@@ -129,6 +129,18 @@ func MigrateTables() error {
     `); err != nil {
 		return err
 	}
+	if _, err := DB.Exec(`
+		CREATE TABLE IF NOT EXISTS friendships (
+			id SERIAL PRIMARY KEY,
+			user_login TEXT NOT NULL,
+			friend_login TEXT NOT NULL UNIQUE,
+			added_at TIMESTAMP DEFAULT NOW(),
+			FOREIGN KEY (user_login) REFERENCES users(login),
+			FOREIGN KEY (friend_login) REFERENCES users(login)
+	);
+    `); err != nil {
+		return err
+	}
 	return nil
 }
 func GetAllCountries(region string) ([]CountryResponse, error) {
@@ -260,4 +272,25 @@ func CheckBlackList(token string)(int,error){
 	}
 
 	return count,nil
+}
+func AddFriend(friendLogin string, login string)error{
+	_, err := DB.Exec(fmt.Sprintf("INSERT INTO friendships (user_login,friend_login) VALUES ('%s','%s')",login,friendLogin))
+	if err !=nil{
+		return err
+	}
+	return nil
+}
+func RemoveFriend(friendLogin string, login string)error{
+	_, err := DB.Exec(fmt.Sprintf("DELETE FROM friendships WHERE friend_login = '%s' AND user_login = '%s'",friendLogin,login))
+	if err !=nil{
+		return err
+	}
+	return nil
+}
+func GetFriendsList(login string, offset int, limit int)([]Friend,error){
+	var friends []Friend
+	if err := DB.Select(&friends,fmt.Sprintf("SELECT friend_login,added_at FROM friendships WHERE user_login = '%s' ORDER BY added_at DESC LIMIT %d OFFSET %d",login,limit,offset)); err !=nil{
+		return nil, err
+	}
+	return friends,nil
 }

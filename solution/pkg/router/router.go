@@ -24,6 +24,13 @@ func RouteAll(r *gin.Engine) {
 			profile.PATCH("/profile", api.EditMe)
 			profile.POST("/updatePassword", api.UpdatePassword)
 		}
+		friends := api_router.Group("friends")
+		{
+			friends.Use(middlewares.AuthValidation)
+			friends.POST("/add", api.AddFriend)
+			friends.POST("/remove", api.RemoveFriend)
+			friends.GET("", api.GetFriendsList)
+		}
 		api_router.Use(middlewares.AuthValidation)
 		api_router.GET("/profiles/:login", api.Profiles)
 	}

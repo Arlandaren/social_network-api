@@ -42,11 +42,16 @@ func AuthValidation(c *gin.Context){
 		return
 	}
 	userID, ok := claims["user_id"].(float64)
-		if !ok {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"reason": "Invalid token"})
-			return
-		}
-
+	if !ok {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"reason": "Invalid token"})
+		return
+	}
+	userLogin, ok := claims["user_login"].(string)
+	if !ok {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"reason": "Invalid token"})
+		return
+	}
+	c.Set("user_login", userLogin)
 	c.Set("user_id", uint(userID))
 
 }
