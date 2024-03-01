@@ -161,7 +161,7 @@ func GetUser(username string) (*User, error) {
 	}
 	return &user, nil
 }
-func CreateUser(username string, email string, password string, country string, is_public bool, phone_number string, image string) (*Profile,error) { 
+func CreateUser(username string, email string, password string, country string, is_public bool, phone_number string, image string) (map[string]interface{},error) { 
 	if username == "" || email == "" || password == "" || country == ""{
         return nil, errors.New("неверный формат")
     }
@@ -169,24 +169,22 @@ func CreateUser(username string, email string, password string, country string, 
     if err != nil {
         return nil,err
     }
-	// profile := map[string]interface{}{
-	// 	"login": username,
-	// 	"email": email,
-	// 	"countryCode": country,
-	// 	"isPublic": is_public,
-	// 	"phone": phone_number,
-	// 	"image": image,
-	// }
-	profile := Profile{
-		Login     : username,
-		Email   : email,
-		CountryCode :country,
-		IsPublic : is_public,
-		Phone : phone_number,
-		Image : image,
-		
+	profile := map[string]interface{}{
+		"login": username,
+		"email": email,
+		"countryCode": country,
+		"isPublic": is_public,
+		"phone": phone_number,
 	}
-    return &profile, nil
+	// profile := Profile{
+	// 	Login     : username,
+	// 	Email   : email,
+	// 	CountryCode :country,
+	// 	IsPublic : is_public,
+	// 	Phone : phone_number,
+		
+	// }
+    return profile, nil
 }
 func GetMyProfile(id uint)(*Profile, error){
 	var profile Profile
