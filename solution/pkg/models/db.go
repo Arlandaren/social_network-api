@@ -170,11 +170,12 @@ func CreateUser(username string, email string, password string, country string, 
         return nil,err
     }
 	profile := map[string]interface{}{
-		"Login": username,
-		"Email": email,
-		"CountryCode": country,
-		"IsPublic": is_public,
-		"Phone": phone_number,
+		"login": username,
+		"email": email,
+		"countryCode": country,
+		"isPublic": is_public,
+		"phone": phone_number,
+		"image": image,
 	}
     return profile, nil
 }
