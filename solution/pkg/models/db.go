@@ -168,7 +168,6 @@ func CreateUser(username string, email string, password string, country string, 
 		CountryCode: country,
 		IsPublic: is_public,
 		Phone: phone_number,
-		Image: image,
 	}
     return &profile, nil
 }
