@@ -1,6 +1,7 @@
 package models
 
 import (
+
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -20,6 +21,7 @@ type Profile struct{
     CountryCode string `json:"countryCode"`
     IsPublic bool `json:"isPublic"`
     Phone string `json:"phone"`
+	Image string `json:"image"`
 }
 type Countries struct {
 	ID     uint   `json:"id" db:"id"`
@@ -37,4 +39,10 @@ type CountryResponse struct {
 type Claims struct {
 	User_id uint `json:"user_id"`
 	jwt.StandardClaims
+}
+type EditParameters struct{
+	CountryCode string `json:"countryCode"`
+	IsPublic bool	`json:"isPublic"`
+	Phone string `json:"phone"`
+	Image string  `json:"image"`
 }

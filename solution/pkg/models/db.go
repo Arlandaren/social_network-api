@@ -39,6 +39,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
@@ -84,15 +85,27 @@ func MigrateTables() error {
 		CREATE TABLE IF NOT EXISTS countries (
 			id SERIAL PRIMARY KEY,
 			name VARCHAR(100),
-			alpha2 VARCHAR(2) UNIQUE,
+			alpha2 VARCHAR(2),
 			alpha3 VARCHAR(3),
 			region TEXT
 		);
-		ALTER TABLE countries ADD CONSTRAINT unique_alpha2 UNIQUE (alpha2);
     `); err != nil {
 		return err
 	}
+	var constraintExists bool
+    err := DB.QueryRow("SELECT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE table_name = 'countries' AND constraint_name = 'unique_alpha2')").Scan(&constraintExists)
+    if err != nil {
+        return err
+    }
 
+    if !constraintExists {
+        if _, err := DB.Exec(`
+            ALTER TABLE countries 
+            ADD CONSTRAINT unique_alpha2 UNIQUE (alpha2)
+        `); err != nil {
+            return err
+        }
+    }
 	if _, err := DB.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
 			id SERIAL PRIMARY KEY,
@@ -143,7 +156,7 @@ func GetUser(username string) (*User, error) {
 }
 func CreateUser(username string, email string, password string, country string, is_public bool, phone_number string, image string) (*Profile,error) { 
 	if username == "" || email == "" || password == "" || country == ""{
-        return nil, errors.New("Неверный формат")
+        return nil, errors.New("неверный формат")
     }
     _, err := DB.Exec("INSERT INTO users (login, email, password, countryCode, isPublic, phone, image) VALUES ($1, $2, $3, $4, $5, $6, $7)", username, email, password, country, is_public, phone_number, image)
     if err != nil {
@@ -155,21 +168,45 @@ func CreateUser(username string, email string, password string, country string, 
 		CountryCode: country,
 		IsPublic: is_public,
 		Phone: phone_number,
+		Image: image,
 	}
     return &profile, nil
 }
 func GetMyProfile(id uint)(*Profile, error){
 	var profile Profile
-	err := DB.Get(&profile, fmt.Sprintf("SELECT login, email, countryCode, isPublic, phone FROM users WHERE id = '%d'", id))
+	err := DB.Get(&profile, fmt.Sprintf("SELECT login, email, countryCode, isPublic, phone, image FROM users WHERE id = '%d'", id))
 	if err != nil{
 		return nil, err
 	}
 	return &profile,nil
 }
-func GetProfile(id uint)(*Profile, error){
+func GetProfile(login string)(*Profile, error){
 	var profile Profile
-	if err := DB.Get(&profile, fmt.Sprintf("SELECT login, email, countryCode, isPublic, phone FROM users WHERE id = '%d'", id)); err != nil {
+	if err := DB.Get(&profile, fmt.Sprintf("SELECT login, email, countryCode, isPublic, phone, image FROM users WHERE login = '%s' AND isPublic = true", login)); err != nil {
 		return nil, err
 	}
 	return &profile,nil
+}
+func UpdateProfile(userId uint, editParameters *EditParameters)error{
+	query := "UPDATE users SET"
+	if editParameters.CountryCode != "" {
+		query +=  fmt.Sprintf(" countrycode = '%s',", editParameters.CountryCode)
+	}
+	if strconv.FormatBool(editParameters.IsPublic) != "" {
+		query += fmt.Sprintf("ispublic = %s,", strconv.FormatBool(editParameters.IsPublic))
+	}
+	if editParameters.Phone != "" {
+		query += fmt.Sprintf("phone = '%s',", editParameters.Phone)
+	}
+	if editParameters.Image != "" {
+		query += fmt.Sprintf("image = '%s',", editParameters.Image)
+	}
+	query = query[:len(query)-1]
+	
+	query += fmt.Sprintf(" WHERE id = '%d'", userId)
+	_, err := DB.Exec(query)
+	if err != nil{
+		return err
+	}
+	return nil
 }

@@ -45,7 +45,7 @@ func Register(c *gin.Context) {
 
 	profile, err := models.CreateUser(user.Username, user.Email, user.Password, user.CountryCode, user.PublicProfile, user.PhoneNumber, user.Image)
 	if err != nil {
-        if err.Error() == "Неверный формат" {
+        if err.Error() == "неверный формат" {
             c.JSON(400, "Регистрационные данные не соответствуют ожидаемому формату и требованиям.")
             return
         }
