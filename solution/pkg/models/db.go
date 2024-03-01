@@ -88,6 +88,7 @@ func MigrateTables() error {
 			alpha3 VARCHAR(3),
 			region TEXT
 		);
+		ALTER TABLE countries ADD CONSTRAINT unique_alpha2 UNIQUE (alpha2);
     `); err != nil {
 		return err
 	}
