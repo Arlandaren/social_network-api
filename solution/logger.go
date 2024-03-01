@@ -11,11 +11,10 @@ type LoggerWrapper struct {
 }
 
 func NewLogger() *LoggerWrapper {
-    file, err := os.OpenFile("logfile.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
-    if err != nil {
-        Logger.Println("Не удалось создать файл логов: ", err)
-    }
-    print(file)
+    // file, err := os.OpenFile("logfile.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+    // if err != nil {
+    //     Logger.Println("Не удалось создать файл логов: ", err)
+    // }
     logger := log.New(os.Stdout, "|||LOG|||", log.Ldate|log.Ltime|log.Lshortfile)
     return &LoggerWrapper{
         Logger: logger,

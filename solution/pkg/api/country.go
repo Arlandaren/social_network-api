@@ -9,9 +9,8 @@ import(
 func GetAllCountries(c *gin.Context){
 	region := c.Query("region")
 	countries, err := models.GetAllCountries(region)
-	
 	if err != nil{
-		c.JSON(500, gin.H{"error":err.Error()})
+		c.JSON(400, gin.H{"error":"Формат входного запроса не соответствует формату либо переданы неверные значения"})
 	} else{
 		c.JSON(200,countries)
 	}
@@ -19,16 +18,16 @@ func GetAllCountries(c *gin.Context){
 func GetCountryByid(c *gin.Context){
 	alpha2 := c.Param("alpha2")
 	country, err := models.GetCountryByid(alpha2)
-	response := models.CountryResponse{
-        Name:   country.Name,
-        Alpha2: country.Alpha2,
-        Alpha3: country.Alpha3,
-        Region: country.Region,
-    }
-
+	
 	if err != nil{
-		c.JSON(500, gin.H{"error":err.Error()})
+		c.JSON(404, gin.H{"error":"Страна с указанным кодом не найдена."})
 	} else{
+		response := models.CountryResponse{
+			Name:   country.Name,
+			Alpha2: country.Alpha2,
+			Alpha3: country.Alpha3,
+			Region: country.Region,
+		}
 		c.JSON(200,response)
 	}
 

@@ -13,10 +13,15 @@ func Me(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized,"Unauthorized")
 		return 
 	}
-	profile,err := models.GetProfile(userId.(uint))
+	profile,err := models.GetMyProfile(userId.(uint))
 	if err != nil{
 		c.JSON(500,gin.H{"error": "error with Db","message":err.Error()})
 		return
 	}
 	c.JSON(200,profile)
+}
+
+func Profiles(c *gin.Context){
+	// login := c.Param("login")
+
 }

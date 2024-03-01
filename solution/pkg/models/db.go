@@ -37,8 +37,10 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 	"strings"
+
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -56,7 +58,9 @@ func InitDB(cfg string) error {
 		return err
 	}
 	DB = db
-	MigrateTables()
+	if err := MigrateTables(); err != nil{
+		return err
+	}
 
 	return nil
 }
@@ -77,32 +81,32 @@ func DropAllTables() error {
 
 func MigrateTables() error {
 	if _, err := DB.Exec(`
-		CREATE TABLE IF NOT EXISTS users (
-			id SERIAL PRIMARY KEY,
-			login TEXT UNIQUE NOT NULL,
-			email TEXT UNIQUE NOT NULL,
-			password TEXT NOT NULL,
-			countryCode TEXT,
-			isPublic BOOLEAN DEFAULT FALSE,
-			phone TEXT,
-			image TEXT
-	);
-    `); err != nil {
-		return err
-	}
-
-	if _, err := DB.Exec(`
 		CREATE TABLE IF NOT EXISTS countries (
 			id SERIAL PRIMARY KEY,
-			name TEXT,
-			alpha2 TEXT,
-			alpha3 TEXT,
+			name VARCHAR(100),
+			alpha2 VARCHAR(2) UNIQUE,
+			alpha3 VARCHAR(3),
 			region TEXT
 		);
     `); err != nil {
 		return err
 	}
 
+	if _, err := DB.Exec(`
+		CREATE TABLE IF NOT EXISTS users (
+			id SERIAL PRIMARY KEY,
+			login VARCHAR(30) UNIQUE NOT NULL,
+			email VARCHAR(50) UNIQUE NOT NULL,
+			password VARCHAR(100) NOT NULL,
+			countryCode VARCHAR(2) NOT NULL,
+			CONSTRAINT fk_country FOREIGN KEY (countryCode) REFERENCES countries(alpha2),
+			isPublic BOOLEAN DEFAULT true NOT NULL,
+			phone VARCHAR(20) UNIQUE,
+			image VARCHAR(200)
+	);
+    `); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -137,6 +141,9 @@ func GetUser(username string) (*User, error) {
 	return &user, nil
 }
 func CreateUser(username string, email string, password string, country string, is_public bool, phone_number string, image string) (*Profile,error) { 
+	if username == "" || email == "" || password == "" || country == ""{
+        return nil, errors.New("Неверный формат")
+    }
     _, err := DB.Exec("INSERT INTO users (login, email, password, countryCode, isPublic, phone, image) VALUES ($1, $2, $3, $4, $5, $6, $7)", username, email, password, country, is_public, phone_number, image)
     if err != nil {
         return nil,err
@@ -149,6 +156,14 @@ func CreateUser(username string, email string, password string, country string, 
 		Phone: phone_number,
 	}
     return &profile, nil
+}
+func GetMyProfile(id uint)(*Profile, error){
+	var profile Profile
+	err := DB.Get(&profile, fmt.Sprintf("SELECT login, email, countryCode, isPublic, phone FROM users WHERE id = '%d'", id))
+	if err != nil{
+		return nil, err
+	}
+	return &profile,nil
 }
 func GetProfile(id uint)(*Profile, error){
 	var profile Profile
