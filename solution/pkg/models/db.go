@@ -42,7 +42,6 @@ import (
 	"solution/pkg/utils"
 	"strconv"
 	"strings"
-
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -80,7 +79,6 @@ func DropAllTables() error {
 	}
 	return nil
 }
-
 func MigrateTables() error {
 	if _, err := DB.Exec(`
 		CREATE TABLE IF NOT EXISTS countries (
@@ -122,9 +120,17 @@ func MigrateTables() error {
     `); err != nil {
 		return err
 	}
+	if _, err := DB.Exec(`
+		CREATE TABLE IF NOT EXISTS tokensblacklist (
+			id SERIAL PRIMARY KEY,
+			token TEXT
+	);
+	CREATE INDEX IF NOT EXISTS idx_tokensblacklist_token ON tokensblacklist (token);
+    `); err != nil {
+		return err
+	}
 	return nil
 }
-
 func GetAllCountries(region string) ([]CountryResponse, error) {
 	var countries []CountryResponse
 	if region == "" {
@@ -211,12 +217,12 @@ func UpdateProfile(userId uint, editParameters *EditParameters)error{
 	return nil
 }
 func UpdatePassword(form *UpdatePasswordForm, id uint) error{
-	var password_hash string
-	err:= DB.Get(&password_hash,fmt.Sprintf("SELECT password FROM users WHERE id = '%d'",id))
+	var password string
+	err:= DB.Get(&password,fmt.Sprintf("SELECT password FROM users WHERE id = '%d'",id))
 	if err !=nil{
 		return err
 	}
-	if !utils.CompareHashPassword(form.OldPasword,password_hash){
+	if !utils.CompareHashPassword(form.OldPasword,password){
 		return errors.New("пароль не совпадает")
 	}
 	newPassword,err := utils.GenerateHashPassword(form.NewPasword)
@@ -227,5 +233,23 @@ func UpdatePassword(form *UpdatePasswordForm, id uint) error{
 	if err != nil{
 		return err
 	}
+
 	return nil
+}
+func DeactivateToken(token string) error{
+	_,err := DB.Exec("INSERT INTO tokensblacklist (token) VALUES ($1)",token)
+	if err != nil{
+		fmt.Println(err.Error())
+		return err
+	}
+	return nil
+}
+func CheckBlackList(token string)(int,error){
+	var count int
+	err := DB.Get(&count, "SELECT COUNT(*) FROM tokensblacklist WHERE token = $1", token)
+	if err != nil {
+		return 0,err
+	}
+
+	return count,nil
 }

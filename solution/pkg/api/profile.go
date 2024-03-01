@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"solution/pkg/models"
 	"solution/pkg/utils"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -37,9 +38,18 @@ func UpdatePassword(c *gin.Context){
 		return
 	}
 	if err:=models.UpdatePassword(updatePasswordForm, userId.(uint)); err != nil{
-		c.JSON(403, gin.H{"error":err.Error()})
+		c.JSON(403, gin.H{"reason":err.Error()})
 		return
 	}
+	header := c.GetHeader("Authorization")
+	if header == ""{
+		c.JSON(http.StatusUnauthorized,gin.H{"reason":"Auth header is missing"})
+		return
+	}
+	tokenString := strings.Replace(header, "Bearer ", "", 1)
+	
+	models.DeactivateToken(tokenString)
+
 	c.JSON(200,gin.H{"status":"ok"})
 }
 func EditMe(c *gin.Context){
