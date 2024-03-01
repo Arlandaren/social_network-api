@@ -39,6 +39,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"solution/pkg/utils"
 	"strconv"
 	"strings"
 
@@ -154,7 +155,7 @@ func GetUser(username string) (*User, error) {
 	}
 	return &user, nil
 }
-func CreateUser(username string, email string, password string, country string, is_public bool, phone_number string, image string) (*Profile,error) { 
+func CreateUser(username string, email string, password string, country string, is_public bool, phone_number string, image string) (map[string]interface{},error) { 
 	if username == "" || email == "" || password == "" || country == ""{
         return nil, errors.New("неверный формат")
     }
@@ -162,14 +163,14 @@ func CreateUser(username string, email string, password string, country string, 
     if err != nil {
         return nil,err
     }
-	profile := Profile{
-		Login: username,
-		Email: email,
-		CountryCode: country,
-		IsPublic: is_public,
-		Phone: phone_number,
+	profile := map[string]interface{}{
+		"Login": username,
+		"Email": email,
+		"CountryCode": country,
+		"IsPublic": is_public,
+		"Phone": phone_number,
 	}
-    return &profile, nil
+    return profile, nil
 }
 func GetMyProfile(id uint)(*Profile, error){
 	var profile Profile
@@ -204,6 +205,25 @@ func UpdateProfile(userId uint, editParameters *EditParameters)error{
 	
 	query += fmt.Sprintf(" WHERE id = '%d'", userId)
 	_, err := DB.Exec(query)
+	if err != nil{
+		return err
+	}
+	return nil
+}
+func UpdatePassword(form *UpdatePasswordForm, id uint) error{
+	var password_hash string
+	err:= DB.Get(&password_hash,fmt.Sprintf("SELECT password FROM users WHERE id = '%d'",id))
+	if err !=nil{
+		return err
+	}
+	if !utils.CompareHashPassword(form.OldPasword,password_hash){
+		return errors.New("пароль не совпадает")
+	}
+	newPassword,err := utils.GenerateHashPassword(form.NewPasword)
+	if err !=nil{
+		return err
+	}
+	_,err = DB.Exec(fmt.Sprintf("UPDATE users SET password = '%s' WHERE id = '%d'",newPassword,id))
 	if err != nil{
 		return err
 	}

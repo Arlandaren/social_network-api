@@ -22,6 +22,7 @@ func RouteAll(r *gin.Engine) {
 			profile.Use(middlewares.AuthValidation)
 			profile.GET("/profile", api.Me)
 			profile.PATCH("/profile", api.EditMe)
+			profile.POST("/updatePassword", api.UpdatePassword)
 		}
 		api_router.Use(middlewares.AuthValidation)
 		api_router.GET("/profiles/:login", api.Profiles)
