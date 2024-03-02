@@ -42,6 +42,7 @@ import (
 	"solution/pkg/utils"
 	"strconv"
 	"strings"
+
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -137,6 +138,19 @@ func MigrateTables() error {
 			added_at TIMESTAMP DEFAULT NOW(),
 			FOREIGN KEY (user_login) REFERENCES users(login),
 			FOREIGN KEY (friend_login) REFERENCES users(login)
+	);
+    `); err != nil {
+		return err
+	}
+	if _, err := DB.Exec(`
+		CREATE TABLE IF NOT EXISTS posts (
+			id SERIAL PRIMARY KEY,
+			content TEXT NOT NULL,
+			author TEXT NOT NULL REFERENCES users(login),
+			tags TEXT[],
+			created_at TIMESTAMP DEFAULT NOW(),
+			likes_count BIGINT DEFAULT 0,
+			dislikes_count BIGINT DEFAULT 0
 	);
     `); err != nil {
 		return err
@@ -293,4 +307,20 @@ func GetFriendsList(login string, offset int, limit int)([]Friend,error){
 		return nil, err
 	}
 	return friends,nil
+}
+func CreatePost(post *PostRequest)(int64,error){
+	query := "INSERT INTO posts (content, author, tags) VALUES ($1,$2,$3) RETURNING id"
+    var id int64
+    err := DB.QueryRow(query, post.Content,post.Author,post.Tags).Scan(&id)
+    if err != nil {
+        return 0, err
+    }
+    return id, nil
+}
+func GetPostById(id int64)(*Post,error){
+	var post Post
+	if err := DB.Get(&post, "SELECT * FROM posts WHERE id = $1",id); err != nil{
+		return nil,err
+	}
+	return &post,nil
 }

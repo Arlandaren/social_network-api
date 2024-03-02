@@ -19,7 +19,10 @@ func Register(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"reason": "неверный формат"})
 		return
 	}
-
+	if user.Username == "" || user.Username == "my"{
+		c.JSON(http.StatusBadRequest, gin.H{"reason": "неверный формат"})
+		return
+	}
 	existingUser, _ := models.GetUser(user.Username)
 	if existingUser != nil && existingUser.ID != 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"reason": "user already exists"})

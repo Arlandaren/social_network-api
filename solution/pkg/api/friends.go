@@ -72,6 +72,8 @@ func GetFriendsList(c *gin.Context){
 		c.JSON(200, friends)
 		return
 	}
-
+	if len(friends) == 0{
+		friends = make([]models.Friend, 0)
+	}
 	c.JSON(200, friends)
 }

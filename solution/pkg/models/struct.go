@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/lib/pq"
 )
 
 type User struct {
@@ -38,7 +39,7 @@ type CountryResponse struct {
 	Region string `json:"region"`
 }
 type Claims struct {
-	User_id uint `json:"user_id"`
+	User_id    uint   `json:"user_id"`
 	User_login string `json:"user_login"`
 	jwt.StandardClaims
 }
@@ -49,13 +50,27 @@ type EditParameters struct {
 	Image       string `json:"image"`
 }
 type UpdatePasswordForm struct {
-	OldPasword string	`json:"oldPassword"`
-	NewPasword string	`json:"newPassword"`
+	OldPasword string `json:"oldPassword"`
+	NewPasword string `json:"newPassword"`
 }
 type FriendRequest struct {
 	Login string `json:"login"`
 }
-type Friend struct{
-	FriendLogin string `json:"friend_login" db:"friend_login"`
-	AddedAt time.Time `json:"addedAt" db:"added_at"`
+type Friend struct {
+	FriendLogin string    `json:"friend_login" db:"friend_login"`
+	AddedAt     time.Time `json:"addedAt" db:"added_at"`
+}
+type Post struct {
+	Id            uint      `json:"id" db:"id"`
+	Content       string    `json:"content" db:"content"`
+	Author        string    `json:"author" db:"author"`
+	Tags          pq.StringArray  `json:"tags" db:"tags"`
+	CreatedAt     time.Time `json:"created_at" db:"created_at"`
+	LikesCount    uint      `json:"likesCount" db:"likes_count"`
+	DislikesCount uint      `json:"dislikesCount" db:"dislikes_count"`
+}
+type PostRequest struct {
+	Content string   `json:"content"`
+	Tags    pq.StringArray `json:"tags"`
+	Author  string
 }

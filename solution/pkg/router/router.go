@@ -31,6 +31,11 @@ func RouteAll(r *gin.Engine) {
 			friends.POST("/remove", api.RemoveFriend)
 			friends.GET("", api.GetFriendsList)
 		}
+		posts := api_router.Group("posts")
+		{
+			posts.Use(middlewares.AuthValidation)
+			posts.POST("/new", api.NewPost)
+		}
 		api_router.Use(middlewares.AuthValidation)
 		api_router.GET("/profiles/:login", api.Profiles)
 	}
