@@ -1,19 +1,38 @@
 package api
 
-import(
-	"github.com/gin-gonic/gin"
+import (
 	"solution/pkg/models"
+
+	"github.com/gin-gonic/gin"
 )
 
 
 func GetAllCountries(c *gin.Context){
-	region := c.Query("region")
-	countries, err := models.GetAllCountries(region)
-	if err != nil{
-		c.JSON(400, gin.H{"reason":"Формат входного запроса не соответствует формату либо переданы неверные значения"})
-	} else{
-		c.JSON(200,countries)
+	regions := c.QueryArray("region")
+	// for _,region := range regions{
+		
+	// }
+	countries := make([]models.CountryResponse, 0)
+
+	for _, region := range regions {
+    countriesForRegion, err := models.GetAllCountries(region)
+		if err != nil {
+
+			c.JSON(400, gin.H{"reason": "Формат входного запроса не соответствует формату либо переданы неверные значения"})
+
+		}
+
+    	countries = append(countries, countriesForRegion...)
 	}
+
+
+	c.JSON(200, countries)
+	// countries, err := models.GetAllCountries(region)
+	// if err != nil{
+	// 	c.JSON(400, gin.H{"reason":"Формат входного запроса не соответствует формату либо переданы неверные значения"})
+	// } else{
+	// 	c.JSON(200,countries)
+	// }
 }
 func GetCountryByid(c *gin.Context){
 	alpha2 := c.Param("alpha2")
