@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"os"
+	"regexp"
 	"solution/pkg/models"
 	"solution/pkg/utils"
 	"strings"
@@ -19,7 +20,13 @@ func Register(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"reason": "неверный формат"})
 		return
 	}
-	if user.Username == "" || user.Username == "my"{
+	re := regexp.MustCompile(`^[a-zA-Z0-9]+$`)
+	if user.Username == "" || user.Username == "my" || !re.MatchString(user.Username){
+		c.JSON(http.StatusBadRequest, gin.H{"reason": "неверный формат"})
+		return
+	}
+	re = regexp.MustCompile(`\+[\d]+`)
+	if !re.MatchString(user.PhoneNumber){
 		c.JSON(http.StatusBadRequest, gin.H{"reason": "неверный формат"})
 		return
 	}
