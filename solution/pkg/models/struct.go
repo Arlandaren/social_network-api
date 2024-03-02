@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	// "github.com/google/uuid"
 	"github.com/lib/pq"
 )
 
@@ -61,7 +62,7 @@ type Friend struct {
 	AddedAt     time.Time `json:"addedAt" db:"added_at"`
 }
 type Post struct {
-	Id            uint      `json:"id" db:"id"`
+	Id            string     `json:"id" db:"id"`
 	Content       string    `json:"content" db:"content"`
 	Author        string    `json:"author" db:"author"`
 	Tags          pq.StringArray  `json:"tags" db:"tags"`

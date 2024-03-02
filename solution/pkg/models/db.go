@@ -42,7 +42,6 @@ import (
 	"solution/pkg/utils"
 	"strconv"
 	"strings"
-
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -142,19 +141,28 @@ func MigrateTables() error {
     `); err != nil {
 		return err
 	}
-	if _, err := DB.Exec(`
+	_, err = DB.Exec(`
+		CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+	`)
+	if err != nil {
+		return err
+	}
+
+	_, err = DB.Exec(`
 		CREATE TABLE IF NOT EXISTS posts (
-			id SERIAL PRIMARY KEY,
+			id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 			content TEXT NOT NULL,
 			author TEXT NOT NULL REFERENCES users(login),
 			tags TEXT[],
 			created_at TIMESTAMP DEFAULT NOW(),
 			likes_count BIGINT DEFAULT 0,
 			dislikes_count BIGINT DEFAULT 0
-	);
-    `); err != nil {
+		);
+	`)
+	if err != nil {
 		return err
 	}
+
 	return nil
 }
 func GetAllCountries(region string) ([]CountryResponse, error) {
@@ -227,28 +235,34 @@ func GetProfile(login string)(*Profile, error){
 	}
 	return &profile,nil
 }
-func UpdateProfile(userId uint, editParameters *EditParameters)error{
-	query := "UPDATE users SET"
-	if editParameters.CountryCode != "" {
-		query +=  fmt.Sprintf(" countrycode = '%s',", editParameters.CountryCode)
-	}
-	if strconv.FormatBool(editParameters.IsPublic) != "" {
-		query += fmt.Sprintf("ispublic = %s,", strconv.FormatBool(editParameters.IsPublic))
-	}
-	if editParameters.Phone != "" {
-		query += fmt.Sprintf("phone = '%s',", editParameters.Phone)
-	}
-	if editParameters.Image != "" {
-		query += fmt.Sprintf("image = '%s',", editParameters.Image)
-	}
-	query = query[:len(query)-1]
-	
-	query += fmt.Sprintf(" WHERE id = '%d'", userId)
-	_, err := DB.Exec(query)
-	if err != nil{
-		return err
-	}
-	return nil
+func UpdateProfile(userId uint, editParameters *EditParameters) error {
+    query := "UPDATE users SET"
+    updates := []string{}
+
+    if editParameters.CountryCode != "" {
+        updates = append(updates, fmt.Sprintf("countrycode = '%s'", editParameters.CountryCode))
+    }
+    if strconv.FormatBool(editParameters.IsPublic) != "" {
+        updates = append(updates, fmt.Sprintf("ispublic = %t", editParameters.IsPublic))
+    }
+    if editParameters.Phone != "" {
+        updates = append(updates, fmt.Sprintf("phone = '%s'", editParameters.Phone))
+    }
+    if editParameters.Image != "" {
+        updates = append(updates, fmt.Sprintf("image = '%s'", editParameters.Image))
+    }
+
+    if len(updates) == 0 {
+        return nil // Нет обновлений
+    }
+
+    query += " " + strings.Join(updates, ", ") + fmt.Sprintf(" WHERE id = %d", userId)
+
+    _, err := DB.Exec(query)
+    if err != nil {
+        return err
+    }
+    return nil
 }
 func UpdatePassword(form *UpdatePasswordForm, id uint) error{
 	var password string
@@ -308,19 +322,87 @@ func GetFriendsList(login string, offset int, limit int)([]Friend,error){
 	}
 	return friends,nil
 }
-func CreatePost(post *PostRequest)(int64,error){
+func CreatePost(post *PostRequest)(string,error){
 	query := "INSERT INTO posts (content, author, tags) VALUES ($1,$2,$3) RETURNING id"
-    var id int64
+    var id string
     err := DB.QueryRow(query, post.Content,post.Author,post.Tags).Scan(&id)
     if err != nil {
-        return 0, err
+        return "", err
     }
     return id, nil
 }
-func GetPostById(id int64)(*Post,error){
-	var post Post
-	if err := DB.Get(&post, "SELECT * FROM posts WHERE id = $1",id); err != nil{
+func GetPostById(id string, viewerLogin string) (*Post, error) {
+	var author string
+	err:= DB.Get(&author,"SELECT author FROM posts WHERE id = $1", id)
+	if err != nil{
 		return nil,err
 	}
-	return &post,nil
+	user,err := GetUser(author)
+	if err != nil{
+		return nil, err
+	}
+	if !user.PublicProfile{
+		var isFriend bool
+		// if err := DB.QueryRow("SELECT EXISTS (SELECT 1 FROM friendships WHERE user_login = $1 AND friend_login = (SELECT author FROM posts WHERE id = $2))", viewerLogin, id).Scan(&isFriend); err != nil {
+		// 	return nil, err
+		// }
+		if err := DB.QueryRow("SELECT EXISTS (SELECT 1 FROM friendships WHERE user_login = (SELECT author FROM posts WHERE id = $1) AND friend_login = $2)", id, viewerLogin).Scan(&isFriend); err != nil {
+			return nil, err
+		}
+
+		if !isFriend {
+			var isAuthor bool
+			if err := DB.QueryRow("SELECT EXISTS (SELECT 1 FROM posts WHERE id = $1 AND author = $2)", id, viewerLogin).Scan(&isAuthor); err != nil {
+				return nil, err
+			}
+			if !isAuthor {
+				return nil, errors.New("пользователь не имеет доступа к данному посту")
+			}
+		}
+	}
+    
+
+    var post Post
+    if err := DB.Get(&post, "SELECT * FROM posts WHERE id = $1", id); err != nil {
+        return nil, err
+    }
+    return &post, nil
+}
+func GetMyFeedList(login string, offset int, limit int)([]Post,error){
+	var posts []Post
+	if err := DB.Select(&posts,fmt.Sprintf("SELECT * FROM posts WHERE author = '%s' ORDER BY created_at DESC LIMIT %d OFFSET %d",login,limit,offset)); err !=nil{
+		return nil, err
+	}
+	return posts,nil
+}
+
+func GetFeedById(userLogin string, targetLogin string, offset int, limit int)([]Post, error){
+	var posts []Post
+	if userLogin == targetLogin {
+		err:= DB.Select(&posts,"SELECT * FROM posts WHERE author = $1", targetLogin)
+		if err != nil{
+			return nil,err
+		}
+		return posts,nil
+	}
+	user,err := GetUser(targetLogin)
+	if err != nil{
+		return nil, err
+	}
+	if !user.PublicProfile{
+		var isFriend bool
+		if err := DB.QueryRow("SELECT EXISTS (SELECT 1 FROM friendships WHERE user_login = $1 AND friend_login = $2)", targetLogin, userLogin).Scan(&isFriend); err != nil {
+			return nil, err
+		}
+
+		if !isFriend {
+			return nil, errors.New("пользователь не имеет доступа к данному посту")
+		}
+	}
+    
+
+	if err := DB.Select(&posts,fmt.Sprintf("SELECT * FROM posts WHERE author = '%s' ORDER BY created_at DESC LIMIT %d OFFSET %d",targetLogin,limit,offset)); err !=nil{
+		return nil, err
+	}
+	return posts,nil
 }

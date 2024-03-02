@@ -54,13 +54,12 @@ func RemoveFriend(c *gin.Context){
 	c.JSON(200,gin.H{"status":"ok"})
 }
 func GetFriendsList(c *gin.Context){
-	limit,_ := strconv.Atoi(c.Query("limit"))
-	offset,_ := strconv.Atoi(c.Query("offset"))
-	if limit == 0 || limit < 0{
-		limit = 5
-	}
-	if offset < 0{
-		offset = 0
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "5"))
+	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
+
+	if limit < 0 || limit > 50 || offset < 0 {
+		c.JSON(400, gin.H{"reason": "несоответствие формату"})
+		return
 	}
 	login, exists := c.Get("user_login")
 	if !exists{

@@ -35,6 +35,12 @@ func RouteAll(r *gin.Engine) {
 		{
 			posts.Use(middlewares.AuthValidation)
 			posts.POST("/new", api.NewPost)
+			posts.GET("/:postId", api.GetPostById)
+			feed := posts.Group("feed")
+			{
+				feed.GET("/:login", api.GetFeedByLogin)
+				feed.GET("/my", api.GetMyFeed)
+			}
 		}
 		api_router.Use(middlewares.AuthValidation)
 		api_router.GET("/profiles/:login", api.Profiles)
