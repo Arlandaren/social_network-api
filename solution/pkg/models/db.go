@@ -1,39 +1,3 @@
-// package models
-
-// import (
-// 	"fmt"
-
-// 	"gorm.io/driver/postgres"
-// 	"gorm.io/gorm"
-// )
-
-// var DB *gorm.DB
-
-// func InitDB(conn_string string){
-// 	con, err := gorm.Open(postgres.Open(conn_string), &gorm.Config{})
-// 	if err != nil{
-// 		fmt.Println(err.Error())
-// 	}
-// 	if err := con.AutoMigrate(&User{}, &Countries{}); err!=nil{
-// 		fmt.Println(err)
-// 	}
-// 	DB = con
-// 	defer func() {
-// 		dbInstance, _ := DB.DB()
-// 		_ = dbInstance.Close()
-// 	}()
-// }
-
-// func DropAllTables() error {
-// 	if err := DB.Migrator().DropTable(&User{}, &Countries{}); err != nil {
-//         return err
-//     }
-// 	return nil
-// }
-
-//	func GetCountries(){
-//		Countries =
-//	}
 package models
 
 import (
@@ -65,7 +29,6 @@ func InitDB(cfg string) error {
 
 	return nil
 }
-
 func DropAllTables() error {
 	queries := []string{
 		"DROP TABLE IF EXISTS users CASCADE;",
@@ -178,17 +141,17 @@ func MigrateTables() error {
 }
 func GetAllCountries(region string) ([]CountryResponse, error) {
 	var countries []CountryResponse
-	if region == "" {
-		if err := DB.Select(&countries, "SELECT name,alpha2,alpha3,region FROM countries"); err != nil {
-			fmt.Println(err.Error())
+
+	if region == "none" {
+		if err := DB.Select(&countries, "SELECT name,alpha2,alpha3,region FROM countries ORDER BY alpha2 ASC"); err != nil {
 			return nil, err
 		}
 	} else {
-		if err := DB.Select(&countries, fmt.Sprintf("SELECT name,alpha2,alpha3,region FROM countries WHERE LOWER(region) = '%s'", strings.ToLower(region))); err != nil {
-			return nil, err
+		_ = DB.Select(&countries, fmt.Sprintf("SELECT name,alpha2,alpha3,region FROM countries WHERE LOWER(region) = '%s' ORDER BY alpha2 ASC", strings.ToLower(region)))
+		if countries == nil {
+			return nil, errors.New("не найдено стран с таким кодом")
 		}
 	}
-
 	return countries, nil
 }
 func GetCountryByid(alpha2 string) (*Countries, error) {
@@ -399,7 +362,6 @@ func GetMyFeedList(login string, offset int, limit int) ([]Post, error) {
 	}
 	return posts, nil
 }
-
 func GetFeedById(userLogin string, targetLogin string, offset int, limit int) ([]Post, error) {
 	var posts []Post
 	if userLogin == targetLogin {
