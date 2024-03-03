@@ -163,6 +163,16 @@ func MigrateTables() error {
 	if err != nil {
 		return err
 	}
+	if _, err := DB.Exec(`
+		CREATE TABLE IF NOT EXISTS reactions (
+			id SERIAL PRIMARY KEY,
+			user_login TEXT NOT NULL UNIQUE REFERENCES users(login),
+			post_id UUID NOT NULL REFERENCES posts(id),
+			is_like bool 
+		);
+    `); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -344,9 +354,6 @@ func GetPostById(id string, viewerLogin string) (*Post, error) {
 	}
 	if !user.PublicProfile {
 		var isFriend bool
-		// if err := DB.QueryRow("SELECT EXISTS (SELECT 1 FROM friendships WHERE user_login = $1 AND friend_login = (SELECT author FROM posts WHERE id = $2))", viewerLogin, id).Scan(&isFriend); err != nil {
-		// 	return nil, err
-		// }
 		if err := DB.QueryRow("SELECT EXISTS (SELECT 1 FROM friendships WHERE user_login = (SELECT author FROM posts WHERE id = $1) AND friend_login = $2)", id, viewerLogin).Scan(&isFriend); err != nil {
 			return nil, err
 		}
@@ -361,7 +368,24 @@ func GetPostById(id string, viewerLogin string) (*Post, error) {
 			}
 		}
 	}
-
+	var likesCount int
+	err = DB.Get(&likesCount, "SELECT COUNT(*) FROM reactions WHERE post_id = $1 AND is_like = true", id)
+	if err != nil {
+		return nil,err
+	}
+	_, err = DB.Exec("UPDATE posts SET likes_count = $1 WHERE id = $2", likesCount, id)
+	if err != nil {
+		return nil,err
+	}
+	var dislikesCount int
+	err = DB.Get(&dislikesCount, "SELECT COUNT(*) FROM reactions WHERE post_id = $1 AND is_like = false", id)
+	if err != nil {
+		return nil,err
+	}
+	_, err = DB.Exec("UPDATE posts SET dislikes_count = $1 WHERE id = $2", dislikesCount, id)
+	if err != nil {
+		return nil,err
+	}
 	var post Post
 	if err := DB.Get(&post, "SELECT * FROM posts WHERE id = $1", id); err != nil {
 		return nil, err
@@ -404,4 +428,51 @@ func GetFeedById(userLogin string, targetLogin string, offset int, limit int) ([
 		return nil, err
 	}
 	return posts, nil
+}
+func Like(userLogin string, post_id string) error {
+	_,err := GetPostById(post_id, userLogin)
+	if err != nil{
+		return errors.New("пост не найден или к нему нет доступа")
+	}
+	_,err = DB.Exec("INSERT INTO reactions (user_login, post_id, is_like) VALUES ($1,$2,true)",userLogin,post_id)
+	if err !=nil{
+		_, err = DB.Exec("UPDATE reactions SET is_like = true WHERE post_id = $1 AND user_login = $2", post_id, userLogin)
+		if err != nil {
+			return err
+		}
+	}
+	// var likesCount int
+	// err = DB.Get(&likesCount, "SELECT COUNT(*) FROM reactions WHERE post_id = $1 AND is_like = true", post_id)
+	// if err != nil {
+	// 	return err
+	// }
+	// _, err = DB.Exec("UPDATE posts SET likes_count = $1 WHERE id = $2", likesCount, post_id)
+	// if err != nil {
+	// 	return err
+	// }
+	return nil
+}
+func Dislike(userLogin string, post_id string)error{
+	_,err := GetPostById(post_id, userLogin)
+	if err != nil{
+		return errors.New("пост не найден или к нему нет доступа")
+	}
+	_,err = DB.Exec("INSERT INTO reactions (user_login, post_id, is_like) VALUES ($1,$2,false)",userLogin,post_id)
+	if err !=nil{
+		_, err = DB.Exec("UPDATE reactions SET is_like = false WHERE post_id = $1 AND user_login = $2", post_id,userLogin)
+		if err != nil {
+			return err
+		}
+	}
+	
+	// var dislikesCount int
+	// err = DB.Get(&dislikesCount, "SELECT COUNT(*) FROM reactions WHERE post_id = $1 AND is_like = false", post_id)
+	// if err != nil {
+	// 	return err
+	// }
+	// _, err = DB.Exec("UPDATE posts SET dislikes_count = $1 WHERE id = $2", dislikesCount, post_id)
+	// if err != nil {
+	// 	return err
+	// }
+	return nil
 }

@@ -35,6 +35,8 @@ func RouteAll(r *gin.Engine) {
 		{
 			posts.Use(middlewares.AuthValidation)
 			posts.POST("/new", api.NewPost)
+			posts.POST(":postId/like", api.LikePost)
+			posts.POST(":postId/dislike", api.DislikePost)
 			posts.GET("/:postId", api.GetPostById)
 			feed := posts.Group("feed")
 			{

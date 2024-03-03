@@ -7,47 +7,57 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func NewPost(c *gin.Context){
+func NewPost(c *gin.Context) {
 	var postRequest models.PostRequest
-	if err :=  c.ShouldBindJSON(&postRequest); err !=nil{
-		c.JSON(400,gin.H{"reason":err.Error()})
+	if err := c.ShouldBindJSON(&postRequest); err != nil {
+		c.JSON(400, gin.H{"reason": err.Error()})
 		return
+	}
+	if len(postRequest.Content) > 1000 {
+		c.JSON(400, gin.H{"reason": "неверный формат"})
+		return
+	}
+	for _, v := range postRequest.Tags {
+		if len(v) > 20 {
+			c.JSON(400, gin.H{"reason": "неверный формат"})
+			return
+		}
 	}
 	login, exists := c.Get("user_login")
-	if !exists{
-		c.JSON(401,gin.H{"reason":"Unauthorized"})
-		return 
-	}
-	postRequest.Author = login.(string)
-	id,err := models.CreatePost(&postRequest)
-	if err != nil{
-		c.JSON(400,gin.H{"reason":err.Error()})
+	if !exists {
+		c.JSON(401, gin.H{"reason": "Unauthorized"})
 		return
 	}
-	post,err := models.GetPostById(id, postRequest.Author)
-	if err != nil{
-		c.JSON(404,gin.H{"reason":err.Error()})
+	postRequest.Author = login.(string)
+	id, err := models.CreatePost(&postRequest)
+	if err != nil {
+		c.JSON(400, gin.H{"reason": err.Error()})
+		return
+	}
+	post, err := models.GetPostById(id, postRequest.Author)
+	if err != nil {
+		c.JSON(404, gin.H{"reason": err.Error()})
 		return
 	}
 
-	c.JSON(200,post)
+	c.JSON(200, post)
 }
-func GetPostById(c *gin.Context){
+func GetPostById(c *gin.Context) {
 	login, exists := c.Get("user_login")
-	if !exists{
-		c.JSON(401,gin.H{"reason":"Unauthorized"})
-		return 
+	if !exists {
+		c.JSON(401, gin.H{"reason": "Unauthorized"})
+		return
 	}
 	// postid,_ := strconv.ParseInt(c.Param("postId"), 10, 64)
 	postId := c.Param("postId")
-	post,err := models.GetPostById(postId,login.(string))
-	if err != nil{
-		c.JSON(404,gin.H{"reason":"пост не найден или к нему нет доступа"})
+	post, err := models.GetPostById(postId, login.(string))
+	if err != nil {
+		c.JSON(404, gin.H{"reason": "пост не найден или к нему нет доступа"})
 		return
 	}
-	c.JSON(200,post)
+	c.JSON(200, post)
 }
-func GetMyFeed(c *gin.Context){
+func GetMyFeed(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "5"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 
@@ -56,21 +66,21 @@ func GetMyFeed(c *gin.Context){
 		return
 	}
 	login, exists := c.Get("user_login")
-	if !exists{
-		c.JSON(401,gin.H{"reason":"Unauthorized"})
-		return 
+	if !exists {
+		c.JSON(401, gin.H{"reason": "Unauthorized"})
+		return
 	}
-	posts,err := models.GetMyFeedList(login.(string),offset,limit)
-	if err!=nil{
+	posts, err := models.GetMyFeedList(login.(string), offset, limit)
+	if err != nil {
 		c.JSON(200, err.Error())
 		return
 	}
-	if len(posts) == 0{
+	if len(posts) == 0 {
 		posts = make([]models.Post, 0)
 	}
 	c.JSON(200, posts)
 }
-func GetFeedByLogin(c *gin.Context){
+func GetFeedByLogin(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "5"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 
@@ -78,20 +88,56 @@ func GetFeedByLogin(c *gin.Context){
 		c.JSON(400, gin.H{"reason": "несоответствие формату"})
 		return
 	}
-	
+
 	targetLogin := c.Param("login")
 	userLogin, exists := c.Get("user_login")
-	if !exists{
-		c.JSON(401,gin.H{"reason":"Unauthorized"})
-		return 
-	}
-	posts,err := models.GetFeedById(userLogin.(string),targetLogin, offset, limit)
-	if err != nil{
-		c.JSON(404,gin.H{"reason":"пост не найден или к нему нет доступа"})
+	if !exists {
+		c.JSON(401, gin.H{"reason": "Unauthorized"})
 		return
 	}
-	if len(posts) == 0{
+	posts, err := models.GetFeedById(userLogin.(string), targetLogin, offset, limit)
+	if err != nil {
+		c.JSON(404, gin.H{"reason": "пост не найден или к нему нет доступа"})
+		return
+	}
+	if len(posts) == 0 {
 		posts = make([]models.Post, 0)
 	}
-	c.JSON(200,posts)
+	c.JSON(200, posts)
+}
+func LikePost(c *gin.Context) {
+	userLogin, exists := c.Get("user_login")
+	if !exists {
+		c.JSON(401, gin.H{"reason": "Unauthorized"})
+		return
+	}
+	post_id := c.Param("postId")
+	if err := models.Like(userLogin.(string), post_id); err != nil {
+		c.JSON(404, gin.H{"reason": err.Error()})
+		return
+	}
+	post, err := models.GetPostById(post_id,userLogin.(string))
+	if err != nil{
+		c.JSON(404, gin.H{"reason": err.Error()})
+		return
+	}
+	c.JSON(200,post)
+}
+func DislikePost(c *gin.Context) {
+	userLogin, exists := c.Get("user_login")
+	if !exists {
+		c.JSON(401, gin.H{"reason": "Unauthorized"})
+		return
+	}
+	post_id := c.Param("postId")
+	if err := models.Dislike(userLogin.(string), post_id); err != nil {
+		c.JSON(404, gin.H{"reason1": err.Error()})
+		return
+	}
+	post, err := models.GetPostById(post_id,userLogin.(string))
+	if err != nil{
+		c.JSON(404, gin.H{"reason2": err.Error()})
+		return
+	}
+	c.JSON(200,post)
 }
