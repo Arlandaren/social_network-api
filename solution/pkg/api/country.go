@@ -15,6 +15,10 @@ func GetAllCountries(c *gin.Context) {
 		regions = append(regions, "none")
 	}
 	for _, region := range regions {
+		if region == ""{
+			c.JSON(400, gin.H{"reason": "Формат входного запроса не соответствует формату либо переданы неверные значения"})
+			return
+		}
 		countriesForRegion, err := models.GetAllCountries(region)
 		if err != nil {
 			c.JSON(400, gin.H{"reason": "Формат входного запроса не соответствует формату либо переданы неверные значения"})
