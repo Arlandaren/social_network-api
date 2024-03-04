@@ -156,7 +156,8 @@ func GetAllCountries(region string) ([]CountryResponse, error) {
 }
 func GetCountryByid(alpha2 string) (*Countries, error) {
 	var countries Countries
-	if err := DB.Get(&countries, fmt.Sprintf("SELECT * FROM countries WHERE LOWER(alpha2) = '%s'", strings.ToLower(alpha2))); err != nil {
+	// if err := DB.Get(&countries, fmt.Sprintf("SELECT * FROM countries WHERE LOWER(alpha2) = '%s'", strings.ToLower(alpha2))); err != nil {
+	if err := DB.Get(&countries, fmt.Sprintf("SELECT * FROM countries WHERE alpha2 = '%s'", alpha2)); err != nil {
 		return nil, err
 	}
 	return &countries, nil
