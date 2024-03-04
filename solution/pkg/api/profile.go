@@ -93,14 +93,15 @@ func EditMe(c *gin.Context){
 	c.JSON(200,profile)
 }
 func Profiles(c *gin.Context){
-	login := c.Param("login")
-	profile, err := models.GetProfile(login)
+	targetLogin := c.Param("login")
+	userLogin, exists := c.Get("user_login")
+	if !exists {
+		c.JSON(401, gin.H{"reason": "Unauthorized"})
+		return
+	}
+	profile, err := models.GetProfile(targetLogin,userLogin.(string))
 	if err != nil{
-		if err.Error() == "sql: no rows in result set"{
-			c.JSON(403, gin.H{"reason":"профиль не публичный"})
-			return
-		}
-		c.JSON(400, gin.H{"reason":err.Error()})
+		c.JSON(403, gin.H{"reason":err.Error()})
 		return
 	}
 	c.JSON(200,profile)

@@ -3,6 +3,7 @@ package api
 import (
 	"solution/pkg/models"
 	"strconv"
+	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,12 +14,12 @@ func NewPost(c *gin.Context) {
 		c.JSON(400, gin.H{"reason": err.Error()})
 		return
 	}
-	if len(postRequest.Content) > 1000 {
+	if utf8.RuneCountInString(postRequest.Content) > 1000 {
 		c.JSON(400, gin.H{"reason": "неверный формат"})
 		return
 	}
 	for _, v := range postRequest.Tags {
-		if len(v) > 20 {
+		if utf8.RuneCountInString(v) > 20 {
 			c.JSON(400, gin.H{"reason": "неверный формат"})
 			return
 		}

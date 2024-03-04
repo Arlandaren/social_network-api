@@ -32,7 +32,7 @@ func Register(c *gin.Context) {
 	}
 	existingUser, _ := models.GetUser(user.Username)
 	if existingUser != nil && existingUser.ID != 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"reason": "user already exists"})
+		c.JSON(409, gin.H{"reason": "user already exists"})
 		return
 	}
 	if err := utils.CheckPassword(user.Password); err != nil {
@@ -87,7 +87,7 @@ func Signin(c *gin.Context) {
 		return
 	}
 	if !utils.CompareHashPassword(user.Password, existingUser.Password) {
-		c.JSON(400, gin.H{"reason": "Wrong password"})
+		c.JSON(401, gin.H{"reason": "User not found"})
 		return
 	}
 	expirationTime := time.Now().Add(60 * time.Minute)

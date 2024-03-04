@@ -97,10 +97,11 @@ func MigrateTables() error {
 		CREATE TABLE IF NOT EXISTS friendships (
 			id SERIAL PRIMARY KEY,
 			user_login TEXT NOT NULL,
-			friend_login TEXT NOT NULL UNIQUE,
+			friend_login TEXT NOT NULL,
 			added_at TIMESTAMP DEFAULT NOW(),
 			FOREIGN KEY (user_login) REFERENCES users(login),
-			FOREIGN KEY (friend_login) REFERENCES users(login)
+			FOREIGN KEY (friend_login) REFERENCES users(login),
+			UNIQUE (user_login, friend_login)
 	);
     `); err != nil {
 		return err
@@ -129,9 +130,10 @@ func MigrateTables() error {
 	if _, err := DB.Exec(`
 		CREATE TABLE IF NOT EXISTS reactions (
 			id SERIAL PRIMARY KEY,
-			user_login TEXT NOT NULL UNIQUE REFERENCES users(login),
+			user_login TEXT NOT NULL REFERENCES users(login),
 			post_id UUID NOT NULL REFERENCES posts(id),
-			is_like bool 
+			is_like bool,
+			UNIQUE (user_login, post_id) 
 		);
     `); err != nil {
 		return err
@@ -147,7 +149,7 @@ func GetAllCountries(region string) ([]CountryResponse, error) {
 			return nil, err
 		}
 	} else {
-		_ = DB.Select(&countries, fmt.Sprintf("SELECT name,alpha2,alpha3,region FROM countries WHERE LOWER(region) = '%s' ORDER BY alpha2 ASC", strings.ToLower(region)))
+		_ = DB.Select(&countries, fmt.Sprintf("SELECT name,alpha2,alpha3,region FROM countries WHERE region = '%s' ORDER BY alpha2 ASC", region))
 		if countries == nil {
 			return nil, errors.New("не найдено стран с таким кодом")
 		}
@@ -164,7 +166,7 @@ func GetCountryByid(alpha2 string) (*Countries, error) {
 }
 func GetUser(username string) (*User, error) {
 	var user User
-	err := DB.Get(&user, fmt.Sprintf("SELECT * FROM users WHERE LOWER(login) = '%s'", strings.ToLower(username)))
+	err := DB.Get(&user, fmt.Sprintf("SELECT * FROM users WHERE login = '%s'", username))
 	if err != nil {
 		return nil, err
 	}
@@ -203,10 +205,28 @@ func GetMyProfile(id uint) (*Profile, error) {
 	}
 	return &profile, nil
 }
-func GetProfile(login string) (*Profile, error) {
+// func GetProfile(login string) (*Profile, error) {
+// 	var profile Profile
+// 	if err := DB.Get(&profile, fmt.Sprintf("SELECT login, email, countryCode, isPublic, phone, image FROM users WHERE login = '%s' AND isPublic = true", login)); err != nil {
+// 		return nil, err
+// 	}
+// 	return &profile, nil
+// }
+func GetProfile(login string, viewerLogin string) (*Profile, error) {
 	var profile Profile
-	if err := DB.Get(&profile, fmt.Sprintf("SELECT login, email, countryCode, isPublic, phone, image FROM users WHERE login = '%s' AND isPublic = true", login)); err != nil {
+	err := DB.Get(&profile, "SELECT login, email, countryCode, isPublic, phone, image FROM users WHERE login = $1", login)
+	if err != nil {
+		fmt.Println(err.Error())
 		return nil, err
+	}
+	if !profile.IsPublic && login != viewerLogin{
+		var isFriend bool
+		if err := DB.QueryRow("SELECT EXISTS (SELECT 1 FROM friendships WHERE user_login = $1 AND friend_login = $2)", login, viewerLogin).Scan(&isFriend); err != nil {
+			return nil, err
+		}
+		if !isFriend{
+			return nil,errors.New("профиль не публичный")
+		}
 	}
 	return &profile, nil
 }
@@ -277,6 +297,7 @@ func CheckBlackList(token string) (int, error) {
 	return count, nil
 }
 func AddFriend(friendLogin string, login string) error {
+	fmt.Println(login,friendLogin)
 	_, err := DB.Exec(fmt.Sprintf("INSERT INTO friendships (user_login,friend_login) VALUES ('%s','%s')", login, friendLogin))
 	if err != nil {
 		return err
@@ -404,15 +425,6 @@ func Like(userLogin string, post_id string) error {
 			return err
 		}
 	}
-	// var likesCount int
-	// err = DB.Get(&likesCount, "SELECT COUNT(*) FROM reactions WHERE post_id = $1 AND is_like = true", post_id)
-	// if err != nil {
-	// 	return err
-	// }
-	// _, err = DB.Exec("UPDATE posts SET likes_count = $1 WHERE id = $2", likesCount, post_id)
-	// if err != nil {
-	// 	return err
-	// }
 	return nil
 }
 func Dislike(userLogin string, post_id string)error{

@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"unicode"
+	"unicode/utf8"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -17,7 +18,7 @@ func GenerateHashPassword(password string) (string, error) {
 }
 
 func CheckPassword(password string) error {
-    if len(password) < 6 {
+    if utf8.RuneCountInString(password) < 6 {
         return errors.New("пароль должен содержать не менее 6 символов")
     }
 

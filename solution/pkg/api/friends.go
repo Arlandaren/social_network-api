@@ -18,7 +18,7 @@ func AddFriend(c *gin.Context){
 		Login string `json:"login"`
 	}	
 	var friendLogin friendRequest
-    if err := c.BindJSON(&friendLogin); err != nil {
+    if err := c.ShouldBindJSON(&friendLogin); err != nil {
         c.JSON(400, gin.H{"reason": err.Error()})
         return
     }
@@ -27,7 +27,7 @@ func AddFriend(c *gin.Context){
 		return
 	}
 	if err := models.AddFriend(friendLogin.Login, login.(string)); err!=nil{
-		if err.Error() == "pq: повторяющееся значение ключа нарушает ограничение уникальности \"friendships_friend_login_key\""{
+		if err.Error() == "pq: повторяющееся значение ключа нарушает ограничение уникальности \"friendships_user_login_friend_login_key\""{
 			c.JSON(200,gin.H{"status":"ok"})
 			return
 		}
