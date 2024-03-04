@@ -25,7 +25,7 @@ func Register(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"reason": "неверный формат"})
 		return
 	}
-	re = regexp.MustCompile(`\+[\d]+`)
+	re = regexp.MustCompile(`^\+[\d]+$`)
 	if !re.MatchString(user.PhoneNumber){
 		c.JSON(http.StatusBadRequest, gin.H{"reason": "неверный формат"})
 		return

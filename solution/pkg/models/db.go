@@ -158,7 +158,6 @@ func GetAllCountries(region string) ([]CountryResponse, error) {
 }
 func GetCountryByid(alpha2 string) (*Countries, error) {
 	var countries Countries
-	// if err := DB.Get(&countries, fmt.Sprintf("SELECT * FROM countries WHERE LOWER(alpha2) = '%s'", strings.ToLower(alpha2))); err != nil {
 	if err := DB.Get(&countries, fmt.Sprintf("SELECT * FROM countries WHERE alpha2 = '%s'", alpha2)); err != nil {
 		return nil, err
 	}
@@ -205,13 +204,6 @@ func GetMyProfile(id uint) (*Profile, error) {
 	}
 	return &profile, nil
 }
-// func GetProfile(login string) (*Profile, error) {
-// 	var profile Profile
-// 	if err := DB.Get(&profile, fmt.Sprintf("SELECT login, email, countryCode, isPublic, phone, image FROM users WHERE login = '%s' AND isPublic = true", login)); err != nil {
-// 		return nil, err
-// 	}
-// 	return &profile, nil
-// }
 func GetProfile(login string, viewerLogin string) (*Profile, error) {
 	var profile Profile
 	err := DB.Get(&profile, "SELECT login, email, countryCode, isPublic, phone, image FROM users WHERE login = $1", login)
