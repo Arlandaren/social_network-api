@@ -14,8 +14,6 @@ Provide a brief description of what your application does and its unique feature
   - [Friendship Management](#friendship-management)
   - [Post Management](#post-management)
   - [Feed](#feed)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## Installation
 
