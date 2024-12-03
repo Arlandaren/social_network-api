@@ -1,7 +1,5 @@
 # Pulsar
 
-Provide a brief description of what your application does and its unique features. You might also want to include badges for build status, test coverage, and other relevant indicators.
-
 ## Table of Contents
 
 - [Installation](#installation)
